@@ -1,17 +1,20 @@
 {
-    "compilerOptions": {
-        "module": "commonjs",
-        "target": "es5",
-        "noImplicitAny": false,
-        "outDir": ".",
-        "rootDir": ".",
-        "declaration": true,
-        "removeComments": false,
-        "emitDecoratorMetadata": true,
-        "experimentalDecorators": true,
-        "sourceMap": true
-    },
-    "exclude": [
-        "node_modules"
-    ]
+  "compilerOptions": 
+  {
+    "target": "es5",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
+    "sourceMap": true,
+    
+    "removeComments": false,
+    "noImplicitAny": false,
+    "baseUrl": "./src",
+    "outDir": "./dist"
+  },
+  "lib":[ "dom", "es6", "es5" ],
+  "types": [ "jasmine", "node", "source-map", "webpack", "core-js", "form-data" ],
+  "exclude": [ "node_modules" ]
 }
