@@ -21,7 +21,7 @@ module.exports = function(options)
     resolve: 
     {
       extensions: ['', '.ts', '.js'],
-      root: root('src'),
+      root: root('.'),
     },
 
     module: 

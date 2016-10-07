@@ -12,7 +12,7 @@ import
   BaseUrl, Headers,
   Body, Path, Query, Header,
   GET, POST, PUT, DELETE, HEAD, OPTIONS,
-} from '../lib/angular2-rest';
+} from '../src/angular2-rest-client';
 
 describe('api', () =>
 {
