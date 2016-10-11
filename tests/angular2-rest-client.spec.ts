@@ -4,6 +4,7 @@ import { BaseRequestOptions, Http, ConnectionBackend, RequestMethod, Response,
 import { MockBackend, MockConnection } from '@angular/http/testing';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/operator/map';
+import 'rxjs/add/operator/cache';
 
 // Load the implementations that should be tested
 import
@@ -26,7 +27,8 @@ describe('api', () =>
   OPTIONS_URL         = 'test-options',
   HEADER_CLASS_VALUE  = 'test-class-header-value',
   HEADER_METHOD_VALUE = 'test-method-header-value',
-  HEADER_PARAM_VALUE  = 'test-param-header-value';
+  HEADER_PARAM_VALUE  = 'test-param-header-value',
+  CONFIG_JSON         = 'mock-config-location.json';
 
   // our test subject
   @BaseUrl(BASE_URL)
@@ -65,19 +67,28 @@ describe('api', () =>
   }
 
   // for testing BaseUrl from config file
-  @BaseUrl('mock-config-location.json', 'base-url')
+  @BaseUrl(CONFIG_JSON, 'base-url')
   class ApiClient2 extends ApiClient
   {
-    @HEAD()
-    public testBaseUrl(): Observable<Response> { return; } ;
+    @HEAD() public testBaseUrl(): Observable<Response> { return; } ;
   }
+
+  // for testing BaseUrl from Function
+  @BaseUrl(function(){ return this.http.get(CONFIG_JSON).map( (r: Response) => r.json()['base-url'] ) })
+  class ApiClient3 extends ApiClient
+  {
+    @HEAD() public testBaseUrl(): Observable<Response> { return; } ;
+  }
+
   // --- test subject
 
   let
 
   apiClient: ApiClient,
   apiClient2: ApiClient2,
-  mockBackend: MockBackend;
+  apiClient3: ApiClient3,
+  mockBackend: MockBackend,
+  http: Http;
 
   const
   expectRequestMethod = ( reqMethod: RequestMethod ): Observable<any> =>
@@ -98,15 +109,20 @@ describe('api', () =>
       },
       { provide: ApiClient, useFactory: (http: Http) => new ApiClient(http), deps: [Http] },
       { provide: ApiClient2, useFactory: (http: Http) => new ApiClient2(http), deps: [Http] },
+      { provide: ApiClient3, useFactory: (http: Http) => new ApiClient3(http), deps: [Http] },
     ],
    }));
 
-  beforeEach( inject([ApiClient, ApiClient2, MockBackend], (client, client2, mock) =>
-  {
-    apiClient = client;
-    apiClient2 = client2;
-    mockBackend = mock;
-  }));
+
+  beforeEach( inject( [ApiClient, ApiClient2, ApiClient3, MockBackend, Http], 
+    (client, client2, client3, mock, http) =>
+    {
+      apiClient = client;
+      apiClient2 = client2;
+      apiClient3 = client3;
+      mockBackend = mock;
+      http = http
+    }));
 
   it('adds BaseUrl ', async(() =>
   {
@@ -120,7 +136,7 @@ describe('api', () =>
     let requestedConfigXTimes = 0; 
     mockBackend.connections.subscribe( (conn: MockConnection) =>
     {
-      if ( conn.request.url === 'mock-config-location.json' )
+      if ( conn.request.url === CONFIG_JSON )
       {
         conn.mockRespond( new Response( new ResponseOptions({ body: JSON.stringify({'base-url': 'some-value'}), status: 200 }) ));
         requestedConfigXTimes++;
@@ -132,6 +148,21 @@ describe('api', () =>
     apiClient2.testBaseUrl().subscribe();
     // test cache
     apiClient2.testBaseUrl().subscribe( _ => expect(requestedConfigXTimes).toBe(1) );
+  }));
+
+  it('adds BaseUrl from Function', async(() =>
+  {
+    mockBackend.connections.subscribe( (conn: MockConnection) =>
+    {
+      if ( conn.request.url === CONFIG_JSON )
+      {
+        conn.mockRespond( new Response( new ResponseOptions({ body: JSON.stringify({'base-url': 'some-value'}), status: 200 }) ));
+        return;
+      }
+      expect(conn.request.url).toEqual('some-value');
+      conn.mockRespond( new Response( new ResponseOptions({ body: JSON.stringify({}), status: 200 }) ));
+    });
+    apiClient3.testBaseUrl().subscribe();
   }));
 
   it('adds Headers', async( () =>
