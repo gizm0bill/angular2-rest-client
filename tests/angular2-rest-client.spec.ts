@@ -1,6 +1,6 @@
 import { inject, TestBed, async } from '@angular/core/testing';
 import { BaseRequestOptions, Http, ConnectionBackend, RequestMethod, Response,
-  ResponseOptions, URLSearchParams, Headers as NgHeaders } from '@angular/http';
+  ResponseOptions, URLSearchParams, ResponseContentType, Headers as NgHeaders } from '@angular/http';
 import { MockBackend, MockConnection } from '@angular/http/testing';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/operator/map';
@@ -10,8 +10,8 @@ import 'rxjs/add/operator/cache';
 import
 {
   AbstractApiClient,
-  BaseUrl, Headers,
-  Body, Path, Query, Header,
+  BaseUrl, Headers, Error as ApiError,
+  Body, Path, Query, Header, Type,
   GET, POST, PUT, DELETE, HEAD, OPTIONS,
 } from '../src/angular2-rest-client';
 
@@ -28,58 +28,73 @@ describe('api', () =>
   HEADER_CLASS_VALUE  = 'test-class-header-value',
   HEADER_METHOD_VALUE = 'test-method-header-value',
   HEADER_PARAM_VALUE  = 'test-param-header-value',
-  CONFIG_JSON         = 'mock-config-location.json';
+  PATH_PARAM_VALUE    = 'test-path',
+  PATH_PARAM_URL      = 'some/{testPathParam}',
+  ERROR               = new Error('test-error'),
+  CONFIG_JSON         = 'test-config-location.json';
 
   // our test subject
   @BaseUrl(BASE_URL)
-  @Headers({ MockClassHeader: HEADER_CLASS_VALUE })
+  @Headers({ testClassHeader: HEADER_CLASS_VALUE })
+  @ApiError( (err, caught): Observable<string> =>
+  {
+    return Observable.throw(ERROR);
+  })
   class ApiClient extends AbstractApiClient
   {
-    constructor( private _http: Http ) { super(_http); }
+    constructor( protected http: Http ) { super(http); }
 
-    @GET(GET_URL)
-    public testGet(): Observable<Response> { return; }
+    @GET(GET_URL) public testGet(): Observable<Response> { return }
 
-    @POST(POST_URL)
-    public testPost(): Observable<Response> { return; }
+    @POST(POST_URL) public testPost(): Observable<Response> { return }
 
-    @PUT(PUT_URL)
-    public testPut(): Observable<Response> { return; }
+    @PUT(PUT_URL) public testPut(): Observable<Response> { return }
 
-    @DELETE(DELETE_URL)
-    public testDelete(): Observable<Response> { return; }
+    @DELETE(DELETE_URL) public testDelete(): Observable<Response> { return }
 
-    @HEAD(HEAD_URL)
-    public testHead(): Observable<Response> { return; }
+    @HEAD(HEAD_URL) public testHead(): Observable<Response> { return }
 
-    @OPTIONS(OPTIONS_URL)
-    public testOptions(): Observable<Response> { return; }
+    @OPTIONS(OPTIONS_URL) public testOptions(): Observable<Response> { return }
 
     @HEAD()
-    @Headers({ MockMethodHeader: HEADER_METHOD_VALUE })
-    public testHeader( @Header('MockParamHeader') mockHeaderValue: string ): Observable<Response> { return; }
+    @Headers({ testMethodHeader: HEADER_METHOD_VALUE, testMethodHeader1: HEADER_METHOD_VALUE })
+    public testHeader( @Header('testParamHeader') testHeaderValue: string ): Observable<Response> { return }
 
-    @HEAD()
-    public testBody( @Body('MockBody') mockBodyValue: File ): Observable<Response> { return; }
+    @HEAD() public testBody(  @Body('testBodyParam') testBodyValueKey: File, 
+                              @Body() testBodyValueNoKey: File,
+                              @Body('testBodyParamAny') testBodyParamAny: any,
+                              @Body() testBodyParamAnyNoKey: any ): Observable<Response> { return }
 
-    @HEAD()
-    public testQuery( @Query('mockQuery') mockQuery: string ): Observable<Response> { return; }
+    @HEAD() public testQuery( @Query('testQueryParam') testQueryValue: string ): Observable<Response> { return }
+
+    @HEAD(PATH_PARAM_URL) 
+    public testPath( @Path('testPathParam') testPathValue: string ): Observable<Response> { return }
+
+    @GET() @Type(ResponseContentType.Blob)
+    public testType(): Observable<Response> { return }
+
+    @HEAD() public testError(): Observable<Response> { return }
+    
   }
 
   // for testing BaseUrl from config file
   @BaseUrl(CONFIG_JSON, 'base-url')
-  class ApiClient2 extends ApiClient
+  class ApiClient2 extends AbstractApiClient
   {
-    @HEAD() public testBaseUrl(): Observable<Response> { return; } ;
+    constructor( private _http: Http ) { super(_http); }
+    @HEAD() public testBaseUrl(): Observable<Response> { return }
   }
 
   // for testing BaseUrl from Function
   @BaseUrl(function(){ return this.http.get(CONFIG_JSON).map( (r: Response) => r.json()['base-url'] ) })
-  class ApiClient3 extends ApiClient
+  class ApiClient3 extends AbstractApiClient
   {
-    @HEAD() public testBaseUrl(): Observable<Response> { return; } ;
+    constructor( private _http: Http ) { super(_http); }
+    @HEAD() public testBaseUrl(): Observable<Response> { return } 
   }
-
+  // for testing missing Http
+  class ApiClient0 extends AbstractApiClient{ @HEAD() public testError(): Observable<Response> { return } }
+  class ApiClient00 extends AbstractApiClient{ @HEAD() public testNothing(): Observable<Response> { return } }
   // --- test subject
 
   let
@@ -87,6 +102,8 @@ describe('api', () =>
   apiClient: ApiClient,
   apiClient2: ApiClient2,
   apiClient3: ApiClient3,
+  apiClient0: ApiClient0,
+  apiClient00: ApiClient00,
   mockBackend: MockBackend,
   http: Http;
 
@@ -110,19 +127,37 @@ describe('api', () =>
       { provide: ApiClient, useFactory: (http: Http) => new ApiClient(http), deps: [Http] },
       { provide: ApiClient2, useFactory: (http: Http) => new ApiClient2(http), deps: [Http] },
       { provide: ApiClient3, useFactory: (http: Http) => new ApiClient3(http), deps: [Http] },
+      { provide: ApiClient0, useFactory: () => new ApiClient0(undefined) }, // no Http for this one
+      { provide: ApiClient00, useFactory: (http: Http) => new ApiClient00(http), deps: [Http] },
     ],
    }));
 
-
-  beforeEach( inject( [ApiClient, ApiClient2, ApiClient3, MockBackend, Http], 
-    (client, client2, client3, mock, http) =>
+  beforeEach( inject( [ApiClient, ApiClient2, ApiClient3, ApiClient0, ApiClient00, MockBackend, Http], 
+    (client, client2, client3, client0, client00, mock, http) =>
     {
-      apiClient = client;
-      apiClient2 = client2;
-      apiClient3 = client3;
-      mockBackend = mock;
-      http = http
+      [ apiClient, apiClient2, apiClient3, apiClient0, apiClient00 ] = [ client, client2, client3, client0, client00 ];
+      mockBackend = mock; http = http
     }));
+
+  it('throws error if missing Http', async(()=>
+  {
+    expect( () => apiClient0.testError() ).toThrowError()
+  }));
+
+  it('catches Error', async( () =>
+  {
+    mockBackend.connections.subscribe( (conn: MockConnection) => 
+    {
+      conn.mockError(new Error);
+    })
+    apiClient.testError().subscribe(_=>_, err => expect(err).toEqual(ERROR));
+  }));
+
+  it('works without BaseUrl ', async(() =>
+  {
+    mockBackend.connections.subscribe( (conn: MockConnection) => expect(conn.request.url).toEqual('') );
+    apiClient00.testNothing().subscribe();
+  }));
 
   it('adds BaseUrl ', async(() =>
   {
@@ -133,14 +168,14 @@ describe('api', () =>
   it('adds BaseUrl from config.json', async( () =>
   {
     // test cache
-    let requestedConfigXTimes = 0; 
+    let requestedConfigXTimes = 0;
     mockBackend.connections.subscribe( (conn: MockConnection) =>
     {
       if ( conn.request.url === CONFIG_JSON )
       {
         conn.mockRespond( new Response( new ResponseOptions({ body: JSON.stringify({'base-url': 'some-value'}), status: 200 }) ));
         requestedConfigXTimes++;
-        return;
+        return
       }
       expect(conn.request.url).toEqual('some-value');
       conn.mockRespond( new Response( new ResponseOptions({ body: JSON.stringify({}), status: 200 }) ));
@@ -157,7 +192,7 @@ describe('api', () =>
       if ( conn.request.url === CONFIG_JSON )
       {
         conn.mockRespond( new Response( new ResponseOptions({ body: JSON.stringify({'base-url': 'some-value'}), status: 200 }) ));
-        return;
+        return
       }
       expect(conn.request.url).toEqual('some-value');
       conn.mockRespond( new Response( new ResponseOptions({ body: JSON.stringify({}), status: 200 }) ));
@@ -169,9 +204,10 @@ describe('api', () =>
   {
     const expectedHeaders = new NgHeaders
     ({
-      MockMethodHeader: HEADER_METHOD_VALUE,
-      MockParamHeader:  HEADER_PARAM_VALUE,
-      MockClassHeader:  HEADER_CLASS_VALUE,
+      testMethodHeader: HEADER_METHOD_VALUE,
+      testMethodHeader1: HEADER_METHOD_VALUE,
+      testParamHeader:  HEADER_PARAM_VALUE,
+      testClassHeader:  HEADER_CLASS_VALUE,
     });
     mockBackend.connections
       .subscribe( (conn: MockConnection) =>
@@ -197,22 +233,43 @@ describe('api', () =>
     // conn.request.contentType
     mockBackend.connections.subscribe( (conn: MockConnection) =>
     {
-      let bodyFile: File = conn.request.getBody().getAll('MockBody')[0];
-      expect( bodyFile.name ).toBe(mockFilename);
+      let bodyNamedFile: File = conn.request.getBody().getAll('testBodyParam')[0],
+          bodyUnnamedFile: File = conn.request.getBody().getAll('files[]')[0],
+          bodyNamedParam: any =  conn.request.getBody().getAll('testBodyParamAny')[0],
+          bodyUnnamedParam: any =  conn.request.getBody().getAll('params[]')[0];
+
+      expect( bodyNamedFile.name ).toBe(mockFilename);
       let reader = new FileReader;
       reader.onload = (e: ProgressEvent) => { expect( (<any>e.target).result ).toEqual(mockData.join('')); };
-      reader.readAsText(bodyFile);
-     });
-    apiClient.testBody(new File( mockData, mockFilename, {type: 'text/plain'} )).subscribe();
+      reader.readAsText(bodyNamedFile);
+      
+    });
+    
+    const file1 = new File( mockData, mockFilename, {type: 'text/plain'} ),
+          file2 = new File( mockData, mockFilename, {type: 'text/plain'} ),
+          param1 = mockData,
+          param2 = mockData;
+
+    apiClient.testBody( file1, file2, param1, param2 ).subscribe();
   }));
 
   it('adds Query', async( () =>
   {
     let query = new URLSearchParams;
-    query.set( encodeURIComponent('mockQuery'), encodeURIComponent('some-value') );
+    query.set( encodeURIComponent('testQueryParam'), encodeURIComponent('some-value') );
     let expectedURL = BASE_URL + '?' + query.toString();
     mockBackend.connections.subscribe( (conn: MockConnection) => expect(conn.request.url).toEqual(expectedURL) );
     apiClient.testQuery('some-value').subscribe();
+  }));
+
+  it('adds Path', async( () =>
+  {
+    const expectedURL = BASE_URL + PATH_PARAM_URL.replace(/\{testPathParam\}/, PATH_PARAM_VALUE);
+    mockBackend.connections.subscribe( (conn: MockConnection) =>
+    {
+      expect(conn.request.url).toEqual(expectedURL);
+    });
+    apiClient.testPath(PATH_PARAM_VALUE).subscribe()
   }));
 
   it('does GET request', async(() =>
@@ -221,34 +278,50 @@ describe('api', () =>
     apiClient.testGet().subscribe();
   }));
 
-  it('does POST request', () =>
+  it('does POST request', async(() =>
   {
     expectRequestMethod(RequestMethod.Post).subscribe();
     apiClient.testPost().subscribe();
-  });
+  }));
 
-  it('does PUT request', () =>
+  it('does PUT request', async(() =>
   {
     expectRequestMethod(RequestMethod.Put).subscribe();
     apiClient.testPut().subscribe();
-  });
+  }));
 
-  it('does DELETE request', () =>
+  it('does DELETE request', async(() =>
   {
     expectRequestMethod(RequestMethod.Delete).subscribe();
     apiClient.testDelete().subscribe();
-  });
+  }));
 
-  it('does HEAD request', () =>
+  it('does HEAD request',  async(() =>
   {
     expectRequestMethod(RequestMethod.Head).subscribe();
     apiClient.testHead().subscribe();
-  });
+  }));
 
-  it('does OPTIONS request', () =>
+  it('does OPTIONS request', async(() =>
   {
     expectRequestMethod(RequestMethod.Options).subscribe();
     apiClient.testOptions().subscribe();
-  });
+  }));
+
+  it('sets response content Type', async( () =>
+  {
+    const json = JSON.stringify({some: 'value'}, null, 2);
+    mockBackend.connections.subscribe( (conn: MockConnection) =>
+    {
+      expect(conn.request.responseType).toBe(ResponseContentType.Blob);
+      conn.mockRespond( new Response( new ResponseOptions({ body: new Blob([json], {type: 'application/json'}) })));
+    })
+    return apiClient.testType().subscribe( _ =>
+    {
+      let reader = new FileReader;
+      reader.onload = (e: ProgressEvent) => { expect((<any>e.target).result).toBe(json) };
+      reader.readAsBinaryString(_.blob());
+    });
+  }));
 
 });

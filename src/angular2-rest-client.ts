@@ -157,7 +157,8 @@ let buildMethodDeco = (method: any) =>
       // let oldValue = descriptor.value;
       descriptor.value = function(...args: any[]): Observable<any>
       {
-        if ( this.http === undefined ) throw new TypeError(`Property 'http' missing in ${this.constructor}. Check constructor dependencies!`);
+        if ( this.http === undefined )
+          throw new TypeError(`Property 'http' missing in ${this.constructor}. Check constructor dependencies!`);
 
         // query params
         let queryParams: any[] = Reflect.getOwnMetadata(MetadataKeys.Query, target, targetKey),
