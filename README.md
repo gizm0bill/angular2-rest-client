@@ -66,7 +66,7 @@ class ApiClient extends AbstractApiClient
   @OPTIONS('/resource') 
   public describe(): Observable<Response> { return }
 }
-
+```
 ## License
 
 MIT
