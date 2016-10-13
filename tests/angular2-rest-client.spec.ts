@@ -36,10 +36,7 @@ describe('api', () =>
   // our test subject
   @BaseUrl(BASE_URL)
   @Headers({ testClassHeader: HEADER_CLASS_VALUE })
-  @ApiError( (err, caught): Observable<string> =>
-  {
-    return Observable.throw(ERROR);
-  })
+  @ApiError( (err, caught): Observable<string> => Observable.throw(ERROR) )
   class ApiClient extends AbstractApiClient
   {
     constructor( protected http: Http ) { super(http); }
@@ -83,6 +80,9 @@ describe('api', () =>
   {
     constructor( private _http: Http ) { super(_http); }
     @HEAD() public testBaseUrl(): Observable<Response> { return }
+
+    @Headers({ testMethodHeader: HEADER_METHOD_VALUE }) // for the sake of coverage
+    public testMethodHeaderFirst(): Observable<Response> { return }
   }
 
   // for testing BaseUrl from Function
@@ -94,6 +94,7 @@ describe('api', () =>
   }
   // for testing missing Http
   class ApiClient0 extends AbstractApiClient{ @HEAD() public testError(): Observable<Response> { return } }
+  // for testing without BaseUrl
   class ApiClient00 extends AbstractApiClient{ @HEAD() public testNothing(): Observable<Response> { return } }
   // --- test subject
 

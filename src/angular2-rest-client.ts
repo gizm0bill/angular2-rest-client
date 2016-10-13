@@ -9,7 +9,6 @@ import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/mergeMap';
 import 'rxjs/add/operator/catch';
 import 'rxjs/add/operator/share';
-import 'rxjs/add/operator/cache';
 
 function isObject(item)
 {
@@ -66,7 +65,7 @@ export function BaseUrl(url: (() => Observable<string>) | string, configKey?: st
       let cached;
       Target.prototype.getBaseUrl = function()
       {
-        return !cached ? (cached = this.http.get(url).map( r => r.json()[configKey] ).cache()) : cached;
+        return !cached ? (cached = this.http.get(url).map( r => r.json()[configKey] ).share()) : cached;
       };
     }
     else Target.prototype.getBaseUrl = () => Observable.fromPromise( Promise.resolve(url) );
@@ -110,9 +109,7 @@ export function Type(arg: ResponseContentType)
   };
 }
 
-/**
- * class decorator
- */
+// class decorator
 export function Error(handler: (...args: any[]) => any )
 {
   function decorator <TClass extends { new (...args: any[]): AbstractApiClient }>(target: TClass): TClass
