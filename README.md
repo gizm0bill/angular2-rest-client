@@ -3,7 +3,17 @@ Angular2 REST Client inpsired by [angular2-rest](https://github.com/Paldom/angul
 Tooling inspired by [angular2-webpack-starter](https://github.com/AngularClass/angular2-webpack-starter)
 
 ## Installation
-`npm install angular2-rest-client` in your angular2 project
+`npm install angular2-rest-client --save`
+
+
+Don't forget to add it to your System.js config if you're using that:
+
+`
+'angular2-rest-client': 'npm:angular2-rest-client/bundles/index.umd.js'
+`,
+where `npm:` is the path pointing to `node_modules/`
+
+...also depends on Reflect: `'reflect-metadata': 'npm:reflect-metadata/Reflect.js'`
 
 ## Example
 
