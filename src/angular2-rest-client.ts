@@ -65,7 +65,9 @@ export function BaseUrl(url: (() => Observable<string>) | string, configKey?: st
       let cached;
       Target.prototype.getBaseUrl = function()
       {
-        return !cached ? (cached = this.http.get(url).map( r => r.json()[configKey] ).share()) : cached;
+        let x = !cached ? (cached = this.http.get(url).map( r => r.json()[configKey] ).share()) : cached;
+        console.log(x)
+        return x;
       };
     }
     else Target.prototype.getBaseUrl = () => Observable.fromPromise( Promise.resolve(url) );
@@ -172,7 +174,11 @@ let buildMethodDeco = (method: any) =>
         let _headers = {},
             defaultHeaders = Reflect.getOwnMetadata(MetadataKeys.Header, target.constructor ),
             methodHeaders = Reflect.getOwnMetadata(MetadataKeys.Header, target, targetKey);
-        defaultHeaders && defaultHeaders.forEach( h => extend( _headers, h.key ) );
+        defaultHeaders && defaultHeaders.forEach( h => 
+        {
+          for ( let _hk in h.key ) if ( typeof h.key[_hk] === 'function' ) h.key[_hk] = h.key[_hk].call(this);
+          extend( _headers, h.key ) 
+        });
         methodHeaders && methodHeaders.forEach( h =>
         {
           let k = {};

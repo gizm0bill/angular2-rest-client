@@ -11,7 +11,7 @@
     "sourceMap": true,
     "skipLibCheck": true,
     "stripInternal": true,
-    "removeComments": false,
+    "removeComments": true,
     "noImplicitAny": false,
     "outDir": "dist/"
   },
