@@ -1,4 +1,5 @@
 var path = require('path');
+var webpack = require('webpack');
 var ROOT = path.resolve(__dirname, '.');
 function root(args) 
 {
@@ -20,13 +21,19 @@ module.exports = function(options)
 
     resolve: 
     {
-      extensions: ['', '.ts', '.js'],
-      root: root('.'),
+      extensions: ['.ts', '.js'],
+      modules: [ path.join(__dirname, 'src'), path.join( __dirname, 'node_modules' ) ],
     },
-
+    plugins: 
+    [
+       new webpack.LoaderOptionsPlugin
+       ({
+         options: { verbose: true, debug: true }
+       })
+    ],
     module: 
     {
-      preLoaders: 
+      rules: 
       [
         /**
          * Source map loader support for *.js files
@@ -34,6 +41,7 @@ module.exports = function(options)
          * See: https://github.com/webpack/source-map-loader
          */
         {
+          enforce: 'pre',
           test: /\.js$/,
           loader: 'source-map-loader',
           exclude: 
@@ -42,17 +50,13 @@ module.exports = function(options)
             root('node_modules/rxjs'),
             root('node_modules/@angular')
           ]
-        }
-      ],
-
+        },
       /**
        * An array of automatically applied loaders.
        * IMPORTANT: The loaders here are resolved relative to the resource which they are applied to.
        * This means they are not resolved relative to the configuration file.
        * See: http://webpack.github.io/docs/configuration.html#module-loaders
        */
-      loaders: 
-      [
         {
           test: /\.ts$/,
           loader: 'awesome-typescript-loader',
@@ -64,16 +68,13 @@ module.exports = function(options)
           },
           exclude: []
         },
-      ],
-
-      postLoaders: 
-      [
         /**
          * Instruments JS files with Istanbul for subsequent code coverage reporting.
          * Instrument only testing sources.
          * See: https://github.com/deepsweet/istanbul-instrumenter-loader
          */
         {
+          enforce: 'post',
           test: /\.(js|ts)$/, loader: 'istanbul-instrumenter-loader',
           include: root('src'),
           exclude: [ /\.spec\.ts$/, /node_modules/ ]
@@ -81,12 +82,9 @@ module.exports = function(options)
       ]
     },
 
-    debug: true,
-    verbose: true,
-
     node: 
     {
-      global: 'window',
+      global: true,
       process: false,
       crypto: 'empty',
       module: false,

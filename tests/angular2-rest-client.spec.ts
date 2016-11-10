@@ -33,12 +33,21 @@ describe('api', () =>
   ERROR               = new Error('test-error'),
   CONFIG_JSON         = 'test-config-location.json';
 
+  let testClassHeaderFunction = function(){ return this._randomHelper(); }
+
   // our test subject
   @BaseUrl(BASE_URL)
-  @Headers({ testClassHeader: HEADER_CLASS_VALUE })
+  @Headers
+  ({ 
+    testClassHeader: HEADER_CLASS_VALUE,
+    testClassHeaderFunction: testClassHeaderFunction
+  })
   @ApiError( (err, caught): Observable<string> => Observable.throw(ERROR) )
   class ApiClient extends AbstractApiClient
   {
+    public randomValue: string;
+    private _randomHelper() { return this.randomValue = String(Math.random()); }
+
     constructor( protected http: Http ) { super(http); }
 
     @GET(GET_URL) public testGet(): Observable<Response> { return }
@@ -207,12 +216,13 @@ describe('api', () =>
     ({
       testMethodHeader: HEADER_METHOD_VALUE,
       testMethodHeader1: HEADER_METHOD_VALUE,
-      testParamHeader:  HEADER_PARAM_VALUE,
-      testClassHeader:  HEADER_CLASS_VALUE,
+      testParamHeader: HEADER_PARAM_VALUE,
+      testClassHeader: HEADER_CLASS_VALUE,
     });
     mockBackend.connections
       .subscribe( (conn: MockConnection) =>
       {
+        expectedHeaders.append('testClassHeaderFunction', apiClient.randomValue);
         // need to transform them to lowercase since Angular2.0.2
         let jsonExpectedHeaders = expectedHeaders.toJSON();
         for ( let i of Object.keys(jsonExpectedHeaders).sort() )
