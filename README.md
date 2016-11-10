@@ -2,6 +2,8 @@
 Angular2 REST Client inpsired by [angular2-rest](https://github.com/Paldom/angular2-rest)  
 Tooling inspired by [angular2-webpack-starter](https://github.com/AngularClass/angular2-webpack-starter)
 
+[![npm version][npm-link]][npm-link]
+
 ## Installation
 `npm install angular2-rest-client --save`
 
@@ -80,3 +82,5 @@ class ApiClient extends AbstractApiClient
 ## License
 
 MIT
+
+[npm-link]: https://badge.fury.io/js/angular2-rest-client.svg
