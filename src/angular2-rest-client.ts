@@ -211,6 +211,9 @@ let buildMethodDeco = (method: any) =>
                 body.append( p.key || 'params[]', bodyArg );
             });
           }
+          // single unamed body param, add value as is, usually string
+          else if ( bodyParams.length === 1 && bodyParams[0].key === undefined )
+            body = args[bodyParams[0].index];
           // plain object
           else
           {
@@ -261,4 +264,3 @@ export var DELETE = buildMethodDeco(RequestMethod.Delete);
 export var HEAD = buildMethodDeco(RequestMethod.Head);
 // method decorator
 export var OPTIONS = buildMethodDeco(RequestMethod.Options);
-

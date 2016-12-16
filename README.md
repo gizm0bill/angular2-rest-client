@@ -59,7 +59,11 @@ class ApiClient extends AbstractApiClient
   @POST('/resource') 
   // add body fileds to the request
   public create( @Body('Name') name: string, @Body('Contents') file: File ): Observable<Response> { return }
-  
+
+  @POST('/resource')
+  // can also add just a single param without any name, which will add the body as is to the request
+  public create( @Body() body: string ): Observable<Response> { return }
+
   // PUT type request
   @PUT('/resource') 
   // add header from param to the request

@@ -71,6 +71,8 @@ describe('api', () =>
                               @Body('testBodyParamAny') testBodyParamAny: any,
                               @Body() testBodyParamAnyNoKey: any ): Observable<Response> { return }
 
+    @HEAD() public testCustomBody( @Body() param: string ): Observable<Response> { return }
+
     @HEAD() public testQuery( @Query('testQueryParam') testQueryValue: string ): Observable<Response> { return }
 
     @HEAD(PATH_PARAM_URL) 
@@ -253,7 +255,6 @@ describe('api', () =>
       let reader = new FileReader;
       reader.onload = (e: ProgressEvent) => { expect( (<any>e.target).result ).toEqual(mockData.join('')); };
       reader.readAsText(bodyNamedFile);
-      
     });
     
     const file1 = new File( mockData, mockFilename, {type: 'text/plain'} ),
@@ -262,6 +263,13 @@ describe('api', () =>
           param2 = mockData;
 
     apiClient.testBody( file1, file2, param1, param2 ).subscribe();
+  }));
+
+  it('adds custom single Body param', async( () =>
+  {
+    const customBody = 'custom body value';
+    mockBackend.connections.subscribe( (conn: MockConnection) => expect(conn.request.getBody()).toBe(customBody) );
+    apiClient.testCustomBody(customBody).subscribe();
   }));
 
   it('adds Query', async( () =>
