@@ -174,10 +174,11 @@ let buildMethodDeco = (method: any) =>
         let _headers = {},
             defaultHeaders = Reflect.getOwnMetadata(MetadataKeys.Header, target.constructor ),
             methodHeaders = Reflect.getOwnMetadata(MetadataKeys.Header, target, targetKey);
-        defaultHeaders && defaultHeaders.forEach( h => 
+        defaultHeaders && defaultHeaders.forEach( header => 
         {
-          for ( let _hk in h.key ) if ( typeof h.key[_hk] === 'function' ) h.key[_hk] = h.key[_hk].call(this);
-          extend( _headers, h.key ) 
+          let _h = extend({}, header);
+          for ( let _hk in _h.key ) if ( typeof _h.key[_hk] === 'function' ) _h.key[_hk] = _h.key[_hk].call(this);
+          extend( _headers, _h.key ) 
         });
         methodHeaders && methodHeaders.forEach( h =>
         {
@@ -212,6 +213,9 @@ let buildMethodDeco = (method: any) =>
                 body.append( p.key || 'params[]', bodyArg );
             });
           }
+          // single unamed body param, add value as is, usually string
+          else if ( bodyParams.length === 1 && bodyParams[0].key === undefined )
+            body = args[bodyParams[0].index];
           // plain object
           else
           {
