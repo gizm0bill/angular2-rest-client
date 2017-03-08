@@ -185,8 +185,8 @@ let buildMethodDeco = (method: any) =>
           let k = {};
           // param header from @Header
           if ( typeof h.key === 'string' ) k[h.key] = args[h.index];
-          // method header from @Headers
-          else if ( typeof h.key === 'function' ) k[h.key] = h.key.call(this);
+          // method header from @Headers, use smth like @Headers(function(){ return { Key: smth.call(this) }; }), hacky, I know
+          else if ( typeof h.key === 'function' ) k = h.key.call(this);
           else k = h.key;
           extend( _headers, k );
         });
