@@ -15,6 +15,6 @@
     "noImplicitAny": false,
     "outDir": "dist/"
   },
-  "lib":[ "dom", "es2015" ],
+  "lib":[ "dom", "es2015", "es6", "es2015.Reflect", "es7" ],
   "exclude": [ "node_modules", "**/*.spec.ts" ]
 }

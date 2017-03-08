@@ -19,10 +19,13 @@ module.exports = function(options)
      */
     devtool: 'inline-source-map',
 
+    entry: {
+      'main': './tests/angular2-rest-client.spec.ts'
+    },
     resolve: 
     {
       extensions: ['.ts', '.js'],
-      modules: [ path.join(__dirname, 'src'), path.join( __dirname, 'node_modules' ) ],
+      modules: ['test', 'node_modules'],
     },
     plugins: 
     [
@@ -33,7 +36,7 @@ module.exports = function(options)
     ],
     module: 
     {
-      rules: 
+      loaders: 
       [
         /**
          * Source map loader support for *.js files
@@ -49,8 +52,10 @@ module.exports = function(options)
             // these packages have problems with their sourcemaps
             root('node_modules/rxjs'),
             root('node_modules/@angular')
-          ]
+          ],
+          enforce: 'pre'
         },
+
       /**
        * An array of automatically applied loaders.
        * IMPORTANT: The loaders here are resolved relative to the resource which they are applied to.
@@ -66,7 +71,7 @@ module.exports = function(options)
             inlineSourceMap: true,
             compilerOptions: { removeComments: true }
           },
-          exclude: []
+          exclude: [/\.e2e\.ts$/]
         },
         /**
          * Instruments JS files with Istanbul for subsequent code coverage reporting.
@@ -81,6 +86,7 @@ module.exports = function(options)
         }
       ]
     },
+
 
     node: 
     {

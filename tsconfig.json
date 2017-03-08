@@ -12,7 +12,7 @@
     "removeComments": false,
     "noImplicitAny": false
   },
-  "lib":[ "dom", "es6", "es5" ],
+  "lib":[ "dom", "es6", "es2015", "es7" ],
   "types": [ "jasmine", "node", "source-map", "webpack", "core-js" ],
   "exclude": [ "node_modules" ]
 }
