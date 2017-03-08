@@ -15,6 +15,6 @@ export default
     'rxjs/add/operator/mergeMap': 'Rx.Observable',
     'rxjs/add/operator/catch': 'Rx.Observable',
     'rxjs/add/operator/share': 'Rx.Observable',
-    'reflect-metadata': 'Reflect'
+    'reflect-metadata': 'Reflect',
   }
 }

@@ -1,4 +1,3 @@
-import 'core-js/es7/reflect';
 import { inject, TestBed, async, fakeAsync, tick } from '@angular/core/testing';
 import { BaseRequestOptions, Http, ConnectionBackend, RequestMethod, Response,
   ResponseOptions, URLSearchParams, ResponseContentType, Headers as NgHeaders } from '@angular/http';
