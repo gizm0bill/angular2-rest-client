@@ -18,15 +18,18 @@ module.exports = function(options)
      */
     devtool: 'inline-source-map',
 
+    entry: {
+      'main': './tests/angular2-rest-client.spec.ts'
+    },
     resolve: 
     {
-      extensions: ['', '.ts', '.js'],
-      root: root('.'),
+      extensions: ['.ts', '.js'],
+      modules: ['test', 'node_modules'],
     },
 
     module: 
     {
-      preLoaders: 
+      loaders: 
       [
         /**
          * Source map loader support for *.js files
@@ -41,9 +44,9 @@ module.exports = function(options)
             // these packages have problems with their sourcemaps
             root('node_modules/rxjs'),
             root('node_modules/@angular')
-          ]
-        }
-      ],
+          ],
+          enforce: 'pre'
+        },
 
       /**
        * An array of automatically applied loaders.
@@ -51,8 +54,6 @@ module.exports = function(options)
        * This means they are not resolved relative to the configuration file.
        * See: http://webpack.github.io/docs/configuration.html#module-loaders
        */
-      loaders: 
-      [
         {
           test: /\.ts$/,
           loader: 'awesome-typescript-loader',
@@ -62,18 +63,15 @@ module.exports = function(options)
             inlineSourceMap: true,
             compilerOptions: { removeComments: true }
           },
-          exclude: []
+          exclude: [/\.e2e\.ts$/]
         },
-      ],
-
-      postLoaders: 
-      [
         /**
          * Instruments JS files with Istanbul for subsequent code coverage reporting.
          * Instrument only testing sources.
          * See: https://github.com/deepsweet/istanbul-instrumenter-loader
          */
         {
+          enforce: 'post',
           test: /\.(js|ts)$/, loader: 'istanbul-instrumenter-loader',
           include: root('src'),
           exclude: [ /\.spec\.ts$/, /node_modules/ ]
@@ -81,12 +79,10 @@ module.exports = function(options)
       ]
     },
 
-    debug: true,
-    verbose: true,
 
     node: 
     {
-      global: 'window',
+      global: true,
       process: false,
       crypto: 'empty',
       module: false,

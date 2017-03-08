@@ -1,10 +1,10 @@
+import 'core-js/es7/reflect';
 import { inject, TestBed, async, fakeAsync, tick } from '@angular/core/testing';
 import { BaseRequestOptions, Http, ConnectionBackend, RequestMethod, Response,
   ResponseOptions, URLSearchParams, ResponseContentType, Headers as NgHeaders } from '@angular/http';
 import { MockBackend, MockConnection } from '@angular/http/testing';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/operator/map';
-import 'rxjs/add/operator/cache';
 
 // Load the implementations that should be tested
 import
@@ -215,13 +215,6 @@ describe('api', () =>
       {
         // need to transform them to lowercase since Angular2.0.2
         let jsonExpectedHeaders = expectedHeaders.toJSON();
-        for ( let i of Object.keys(jsonExpectedHeaders).sort() )
-          if ( jsonExpectedHeaders.hasOwnProperty(i) )
-          {
-            let val = jsonExpectedHeaders[i];
-            delete jsonExpectedHeaders[i];
-            jsonExpectedHeaders[i.toLowerCase()] = val;
-          }
         expect( conn.request.headers.toJSON() ).toEqual( jasmine.objectContaining(jsonExpectedHeaders) );
       });
     apiClient.testHeader( HEADER_PARAM_VALUE ).subscribe();

@@ -1,8 +1,8 @@
+import 'core-js/es7/reflect';
 import { Inject } from '@angular/core';
 import { Headers as NgHeaders, Http, Request, Response, RequestMethod,
   RequestOptions, ResponseContentType, URLSearchParams } from '@angular/http';
 import { Observable } from 'rxjs/Observable';
-import 'reflect-metadata';
 import 'rxjs/add/observable/fromPromise';
 import 'rxjs/add/observable/of';
 import 'rxjs/add/operator/map';
@@ -66,7 +66,6 @@ export function BaseUrl(url: (() => Observable<string>) | string, configKey?: st
       Target.prototype.getBaseUrl = function()
       {
         let x = !cached ? (cached = this.http.get(url).map( r => r.json()[configKey] ).share()) : cached;
-        console.log(x)
         return x;
       };
     }
@@ -185,6 +184,7 @@ let buildMethodDeco = (method: any) =>
           // param header from @Header
           if ( typeof h.key === 'string' ) k[h.key] = args[h.index];
           // method header from @Headers
+          else if ( typeof h.key === 'function' ) k[h.key] = h.key.call(this);
           else k = h.key;
           extend( _headers, k );
         });
