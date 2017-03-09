@@ -264,7 +264,6 @@ let buildMethodDeco = (method: any) =>
         {
           let options = new RequestOptions({ method, url: baseUrl + url, headers, body, search: query, responseType }),
               request = new Request(options);
-          console.log(request)
           // observable request
           observable = <Observable<Response>> this.http.request(request).share();
           // plugin error handler if any
