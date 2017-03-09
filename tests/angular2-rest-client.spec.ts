@@ -12,6 +12,7 @@ import
   BaseUrl, Headers, Error as ApiError,
   Body, Path, Query, Header, Type,
   GET, POST, PUT, DELETE, HEAD, OPTIONS,
+  NO_ENCODE, standardEncoding, PassThroughQueryEncoder
 } from '../src/angular2-rest-client';
 
 describe('api', () =>
@@ -61,7 +62,8 @@ describe('api', () =>
                               @Body('testBodyParamAny') testBodyParamAny: any,
                               @Body() testBodyParamAnyNoKey: any ): Observable<Response> { return }
 
-    @HEAD() public testQuery( @Query('testQueryParam') testQueryValue: string ): Observable<Response> { return }
+    @HEAD() public testQuery( @Query('testQuery[Param]') testQueryValue: string, 
+      @Query('testQueryParam[NotEncoded]', NO_ENCODE) testQueryValueNotEncoded: string ): Observable<Response> { return }
 
     @HEAD(PATH_PARAM_URL) 
     public testPath( @Path('testPathParam') testPathValue: string ): Observable<Response> { return }
@@ -248,11 +250,13 @@ describe('api', () =>
 
   it('adds Query', async( () =>
   {
-    let query = new URLSearchParams;
-    query.set( encodeURIComponent('testQueryParam'), encodeURIComponent('some-value') );
+    let query = new URLSearchParams('', new PassThroughQueryEncoder() );
+    // order counts apparently
+    query.set( 'testQueryParam[NotEncoded]', 'some[other][value]' );
+    query.set( standardEncoding('testQuery[Param]'), standardEncoding('some[value]') );
     let expectedURL = BASE_URL + '?' + query.toString();
-    mockBackend.connections.subscribe( (conn: MockConnection) => expect(conn.request.url).toEqual(expectedURL) );
-    apiClient.testQuery('some-value').subscribe();
+    mockBackend.connections.subscribe( (conn: MockConnection) =>  expect(conn.request.url).toEqual(expectedURL) );
+    apiClient.testQuery('some[value]', 'some[other][value]').subscribe();
   }));
 
   it('adds Path', async( () =>
