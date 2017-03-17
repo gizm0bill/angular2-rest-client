@@ -179,6 +179,7 @@ let buildMethodDeco = (method: any) =>
       // let oldValue = descriptor.value;
       descriptor.value = function(...args: any[]): Observable<any>
       {
+        let requestUrl = url;
         if ( this.http === undefined )
           throw new TypeError(`Property 'http' missing in ${this.constructor}. Check constructor dependencies!`);
 
@@ -198,7 +199,7 @@ let buildMethodDeco = (method: any) =>
         // path params
         let pathParams: any[] = Reflect.getOwnMetadata(MetadataKeys.Path, target, targetKey);
         pathParams && pathParams.filter( p => args[p.index] )
-          .forEach( p => url = url.replace(`{${p.key}}`, args[p.index]) );
+          .forEach( p => requestUrl = requestUrl.replace(`{${p.key}}`, args[p.index]) );
 
         // process headers
         let _headers = {},
@@ -262,7 +263,7 @@ let buildMethodDeco = (method: any) =>
         let observable = baseUrlObs
         .flatMap( baseUrl =>
         {
-          let options = new RequestOptions({ method, url: baseUrl + url, headers, body, search: query, responseType }),
+          let options = new RequestOptions({ method, url: baseUrl + requestUrl, headers, body, search: query, responseType }),
               request = new Request(options);
           // observable request
           observable = <Observable<Response>> this.http.request(request).share();

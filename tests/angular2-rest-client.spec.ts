@@ -29,6 +29,7 @@ describe('api', () =>
   HEADER_METHOD_VALUE = 'test-method-header-value',
   HEADER_PARAM_VALUE  = 'test-param-header-value',
   PATH_PARAM_VALUE    = 'test-path',
+  PATH_PARAM_VALUE2   = 'test-path2',
   PATH_PARAM_URL      = 'some/{testPathParam}',
   ERROR               = new Error('test-error'),
   CONFIG_JSON         = 'test-config-location.json';
@@ -266,7 +267,19 @@ describe('api', () =>
     {
       expect(conn.request.url).toEqual(expectedURL);
     });
-    apiClient.testPath(PATH_PARAM_VALUE).subscribe()
+    apiClient.testPath(PATH_PARAM_VALUE).subscribe();
+  }));
+
+  it('adds a different Path', async( () =>
+  {
+    const prevURL = BASE_URL + PATH_PARAM_URL.replace(/\{testPathParam\}/, PATH_PARAM_VALUE);
+    const expectedURL = BASE_URL + PATH_PARAM_URL.replace(/\{testPathParam\}/, PATH_PARAM_VALUE2);
+    mockBackend.connections.subscribe( (conn: MockConnection) =>
+    {
+      expect(conn.request.url).toEqual(expectedURL);
+      expect(conn.request.url).not.toEqual(prevURL);
+    });
+    apiClient.testPath(PATH_PARAM_VALUE2).subscribe();
   }));
 
   it('does GET request', async(() =>
