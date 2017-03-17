@@ -296,6 +296,8 @@ export var DELETE = buildMethodDeco(RequestMethod.Delete);
 export var HEAD = buildMethodDeco(RequestMethod.Head);
 // method decorator
 export var OPTIONS = buildMethodDeco(RequestMethod.Options);
+// method decorator
+export var PATCH = buildMethodDeco(RequestMethod.Patch);
 
 // Don't encode Query parameters
 export const NO_ENCODE = Symbol('apiClient:Query.noEncode');
