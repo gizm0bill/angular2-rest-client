@@ -12,6 +12,7 @@ import
   BaseUrl, Headers, Error as ApiError,
   Body, Path, Query, Header, Type,
   GET, POST, PUT, DELETE, HEAD, OPTIONS,
+  NO_ENCODE, standardEncoding, PassThroughQueryEncoder
 } from '../src/angular2-rest-client';
 
 describe('api', () =>
@@ -28,25 +29,17 @@ describe('api', () =>
   HEADER_METHOD_VALUE = 'test-method-header-value',
   HEADER_PARAM_VALUE  = 'test-param-header-value',
   PATH_PARAM_VALUE    = 'test-path',
+  PATH_PARAM_VALUE2   = 'test-path2',
   PATH_PARAM_URL      = 'some/{testPathParam}',
   ERROR               = new Error('test-error'),
   CONFIG_JSON         = 'test-config-location.json';
 
-  let testClassHeaderFunction = function(){ return this._randomHelper(); }
-
   // our test subject
   @BaseUrl(BASE_URL)
-  @Headers
-  ({ 
-    testClassHeader: HEADER_CLASS_VALUE,
-    testClassHeaderFunction: testClassHeaderFunction
-  })
+  @Headers({ testClassHeader: HEADER_CLASS_VALUE })
   @ApiError( (err, caught): Observable<string> => Observable.throw(ERROR) )
   class ApiClient extends AbstractApiClient
   {
-    public randomValue: string;
-    private _randomHelper() { return this.randomValue = String(Math.random()); }
-
     constructor( protected http: Http ) { super(http); }
 
     @GET(GET_URL) public testGet(): Observable<Response> { return }
@@ -70,9 +63,8 @@ describe('api', () =>
                               @Body('testBodyParamAny') testBodyParamAny: any,
                               @Body() testBodyParamAnyNoKey: any ): Observable<Response> { return }
 
-    @HEAD() public testCustomBody( @Body() param: string ): Observable<Response> { return }
-
-    @HEAD() public testQuery( @Query('testQueryParam') testQueryValue: string ): Observable<Response> { return }
+    @HEAD() public testQuery( @Query('testQuery[Param]') testQueryValue: string, 
+      @Query('testQueryParam[NotEncoded]', NO_ENCODE) testQueryValueNotEncoded: string ): Observable<Response> { return }
 
     @HEAD(PATH_PARAM_URL) 
     public testPath( @Path('testPathParam') testPathValue: string ): Observable<Response> { return }
@@ -217,13 +209,12 @@ describe('api', () =>
     ({
       testMethodHeader: HEADER_METHOD_VALUE,
       testMethodHeader1: HEADER_METHOD_VALUE,
-      testParamHeader: HEADER_PARAM_VALUE,
-      testClassHeader: HEADER_CLASS_VALUE,
+      testParamHeader:  HEADER_PARAM_VALUE,
+      testClassHeader:  HEADER_CLASS_VALUE,
     });
     mockBackend.connections
       .subscribe( (conn: MockConnection) =>
       {
-        expectedHeaders.append('testClassHeaderFunction', apiClient.randomValue);
         // need to transform them to lowercase since Angular2.0.2
         let jsonExpectedHeaders = expectedHeaders.toJSON();
         expect( conn.request.headers.toJSON() ).toEqual( jasmine.objectContaining(jsonExpectedHeaders) );
@@ -257,20 +248,15 @@ describe('api', () =>
     apiClient.testBody( file1, file2, param1, param2 ).subscribe();
   }));
 
-  it('adds custom single Body param', async( () =>
-  {
-    const customBody = 'custom body value';
-    mockBackend.connections.subscribe( (conn: MockConnection) => expect(conn.request.getBody()).toBe(customBody) );
-    apiClient.testCustomBody(customBody).subscribe();
-  }));
-
   it('adds Query', async( () =>
   {
-    let query = new URLSearchParams;
-    query.set( encodeURIComponent('testQueryParam'), encodeURIComponent('some-value') );
+    let query = new URLSearchParams('', new PassThroughQueryEncoder() );
+    // order counts apparently
+    query.set( 'testQueryParam[NotEncoded]', 'some[other][value]' );
+    query.set( standardEncoding('testQuery[Param]'), standardEncoding('some[value]') );
     let expectedURL = BASE_URL + '?' + query.toString();
-    mockBackend.connections.subscribe( (conn: MockConnection) => expect(conn.request.url).toEqual(expectedURL) );
-    apiClient.testQuery('some-value').subscribe();
+    mockBackend.connections.subscribe( (conn: MockConnection) =>  expect(conn.request.url).toEqual(expectedURL) );
+    apiClient.testQuery('some[value]', 'some[other][value]').subscribe();
   }));
 
   it('adds Path', async( () =>
@@ -280,7 +266,19 @@ describe('api', () =>
     {
       expect(conn.request.url).toEqual(expectedURL);
     });
-    apiClient.testPath(PATH_PARAM_VALUE).subscribe()
+    apiClient.testPath(PATH_PARAM_VALUE).subscribe();
+  }));
+
+  it('adds a different Path', async( () =>
+  {
+    const prevURL = BASE_URL + PATH_PARAM_URL.replace(/\{testPathParam\}/, PATH_PARAM_VALUE);
+    const expectedURL = BASE_URL + PATH_PARAM_URL.replace(/\{testPathParam\}/, PATH_PARAM_VALUE2);
+    mockBackend.connections.subscribe( (conn: MockConnection) =>
+    {
+      expect(conn.request.url).toEqual(expectedURL);
+      expect(conn.request.url).not.toEqual(prevURL);
+    });
+    apiClient.testPath(PATH_PARAM_VALUE2).subscribe();
   }));
 
   it('does GET request', async(() =>

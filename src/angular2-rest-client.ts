@@ -2,7 +2,7 @@ import 'core-js/es6/reflect';
 import 'core-js/es7/reflect';
 import { Inject } from '@angular/core';
 import { Headers as NgHeaders, Http, Request, Response, RequestMethod,
-  RequestOptions, ResponseContentType, URLSearchParams } from '@angular/http';
+  RequestOptions, ResponseContentType, URLSearchParams, QueryEncoder } from '@angular/http';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/observable/fromPromise';
 import 'rxjs/add/observable/of';
@@ -10,6 +10,29 @@ import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/mergeMap';
 import 'rxjs/add/operator/catch';
 import 'rxjs/add/operator/share';
+
+export class PassThroughQueryEncoder extends QueryEncoder 
+{
+  encodeKey(k: string): string { return k; }
+  encodeValue(v: string): string { return v; }
+}
+/**
+ * actually copied from @angular/http since it's not exported
+ * @param value to encode
+ */
+export function standardEncoding(v) 
+{ 
+  return encodeURIComponent(v)
+    .replace(/%40/gi, '@')
+    .replace(/%3A/gi, ':')
+    .replace(/%24/gi, '$')
+    .replace(/%2C/gi, ',')
+    .replace(/%3B/gi, ';')
+    .replace(/%2B/gi, '+')
+    .replace(/%3D/gi, '=')
+    .replace(/%3F/gi, '?')
+    .replace(/%2F/gi, '/');
+}
 
 function isObject(item)
 {
@@ -125,13 +148,13 @@ export function Error(handler: (...args: any[]) => any )
 // build method parameters decorators
 let buildParamDeco = (paramDecoName: string) =>
 {
-  return function(key?: string)
+  return function(key?: string, ...extraOptions: any[])
   {
     return function(target: AbstractApiClient, propertyKey: string | symbol, parameterIndex: number)
     {
       let metadataKey = MetadataKeys[paramDecoName];
       let existingParams: Object[] = Reflect.getOwnMetadata( metadataKey, target, propertyKey) || [];
-      existingParams.push({ index: parameterIndex, key });
+      existingParams.push({ index: parameterIndex, key, ...extraOptions });
       Reflect.defineMetadata( metadataKey, existingParams, target, propertyKey );
     };
   };
@@ -156,19 +179,27 @@ let buildMethodDeco = (method: any) =>
       // let oldValue = descriptor.value;
       descriptor.value = function(...args: any[]): Observable<any>
       {
+        let requestUrl = url;
         if ( this.http === undefined )
           throw new TypeError(`Property 'http' missing in ${this.constructor}. Check constructor dependencies!`);
 
         // query params
         let queryParams: any[] = Reflect.getOwnMetadata(MetadataKeys.Query, target, targetKey),
-            query = new URLSearchParams;
+            query = new URLSearchParams('', new PassThroughQueryEncoder());
         queryParams && queryParams.filter( p => args[p.index] )
-          .forEach( p => query.set( encodeURIComponent(p.key), encodeURIComponent( args[p.index] ) ) );
+          .forEach( p => 
+          {
+            let queryKey, queryVal;
+            // don't uri encode flagged params
+            if ( Object.values(p).indexOf(NO_ENCODE) !== -1 ) [ queryKey, queryVal ] = [ p.key, args[p.index] ];
+            else [ queryKey, queryVal ] = [ standardEncoding(p.key), standardEncoding(args[p.index]) ];
+            return query.set( queryKey, queryVal );
+          });
 
         // path params
         let pathParams: any[] = Reflect.getOwnMetadata(MetadataKeys.Path, target, targetKey);
         pathParams && pathParams.filter( p => args[p.index] )
-          .forEach( p => url = url.replace(`{${p.key}}`, args[p.index]) );
+          .forEach( p => requestUrl = requestUrl.replace(`{${p.key}}`, args[p.index]) );
 
         // process headers
         let _headers = {},
@@ -232,9 +263,8 @@ let buildMethodDeco = (method: any) =>
         let observable = baseUrlObs
         .flatMap( baseUrl =>
         {
-          let options = new RequestOptions({ method, url: baseUrl + url, headers, body, search: query, responseType }),
+          let options = new RequestOptions({ method, url: baseUrl + requestUrl, headers, body, search: query, responseType }),
               request = new Request(options);
-
           // observable request
           observable = <Observable<Response>> this.http.request(request).share();
           // plugin error handler if any
@@ -266,3 +296,8 @@ export var DELETE = buildMethodDeco(RequestMethod.Delete);
 export var HEAD = buildMethodDeco(RequestMethod.Head);
 // method decorator
 export var OPTIONS = buildMethodDeco(RequestMethod.Options);
+// method decorator
+export var PATCH = buildMethodDeco(RequestMethod.Patch);
+
+// Don't encode Query parameters
+export const NO_ENCODE = Symbol('apiClient:Query.noEncode');
