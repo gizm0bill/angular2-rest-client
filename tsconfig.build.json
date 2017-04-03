@@ -13,8 +13,9 @@
     "stripInternal": true,
     "removeComments": true,
     "noImplicitAny": false,
-    "outDir": "dist/"
+    "outDir": "aot/",
+    "lib":[ "dom", "es2015", "es2017" ],
+    "types": [ "node" ]
   },
-  "lib":[ "dom", "es2015", "es6", "es2015.Reflect", "es7" ],
   "exclude": [ "node_modules", "**/*.spec.ts" ]
 }

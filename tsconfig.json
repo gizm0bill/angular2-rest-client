@@ -10,9 +10,9 @@
     "sourceMap": true,
     "declaration": true,
     "removeComments": false,
-    "noImplicitAny": false
+    "noImplicitAny": false,
+    "lib": [ "dom", "es6", "es2015", "es7", "es2017" ],
+    "types": [ "jasmine", "node", "source-map", "webpack" ]
   },
-  "lib":[ "dom", "es6", "es2015", "es7" ],
-  "types": [ "jasmine", "node", "source-map", "webpack", "core-js" ],
   "exclude": [ "node_modules" ]
 }
