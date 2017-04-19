@@ -13,9 +13,14 @@
     "stripInternal": true,
     "removeComments": true,
     "noImplicitAny": false,
-    "outDir": "aot/",
+    "outDir": "compiled/",
     "lib":[ "dom", "es2015", "es2017" ],
-    "types": [ "node" ]
+    "typeRoots": [ "node_modules/@types/" ]
   },
-  "exclude": [ "node_modules", "**/*.spec.ts" ]
+  "exclude": [ "node_modules", "**/*.spec.ts" ],
+  "files": ["index.ts"],
+  "angularCompilerOptions": {
+    "genDir": "compiled",
+    "skipMetadataEmit": true
+  }
 }
