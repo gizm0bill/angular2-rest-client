@@ -125,6 +125,32 @@ export function Headers(headers: {})
   return decorator;
 }
 
+export function CQuery(keyOrParams: any, ...extraOptions: any[])
+{
+  function decorator <TClass extends { new (...args: any[]): AbstractApiClient }>(target: TClass): TClass;
+  function decorator(target: Object, propertyKey?: string | symbol, parameterIndex?: number);
+  function decorator(target: Object, propertyKey?: string | symbol, parameterIndex?: number)
+  {
+    if ( parameterIndex !== undefined ) // on param
+    {
+      let metadataKey = MetadataKeys.Query;
+      let existingParams: Object[] = Reflect.getOwnMetadata( metadataKey, target, propertyKey) || [];
+      existingParams.push({ index: parameterIndex, key: keyOrParams, ...extraOptions });
+      Reflect.defineMetadata( metadataKey, existingParams, target, propertyKey );
+    }
+    else // on class
+    {
+      const metadataKey = MetadataKeys.Query;
+      let existingQuery: Object[] = Reflect.getOwnMetadata( metadataKey, target ) || [];
+      existingQuery.push({ index: undefined, key: keyOrParams });
+      Reflect.defineMetadata( metadataKey, existingQuery, target, undefined );
+      return target;
+    }
+    
+  }
+  return decorator;
+}
+
 // method decorator
 export function Type(arg: ResponseContentType)
 {
@@ -184,8 +210,19 @@ let buildMethodDeco = (method: any) =>
           throw new TypeError(`Property 'http' missing in ${this.constructor}. Check constructor dependencies!`);
 
         // query params
-        let queryParams: any[] = Reflect.getOwnMetadata(MetadataKeys.Query, target, targetKey),
+        let defaultQueryParams: any[] = Reflect.getOwnMetadata(MetadataKeys.Query, target.constructor),
+            queryParams: any[] = Reflect.getOwnMetadata(MetadataKeys.Query, target, targetKey),
             query = new URLSearchParams('', new PassThroughQueryEncoder());
+        // TODO see headers processing and make something common
+        defaultQueryParams && defaultQueryParams.forEach( defaQuery => 
+        {
+          let _q = extend({}, defaQuery);
+          for ( let _qk in _q.key ) 
+          {
+            if ( typeof _q.key[_qk] === 'function' ) _q.key[_qk] = _q.key[_qk].call(this);
+            query.set( _qk, _q.key[_qk] );
+          }
+        });
         queryParams && queryParams.filter( p => args[p.index] )
           .forEach( p => 
           {
