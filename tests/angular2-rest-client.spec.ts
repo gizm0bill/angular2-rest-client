@@ -9,7 +9,7 @@ import 'rxjs/add/operator/map';
 import
 {
   AbstractApiClient,
-  BaseUrl, Headers, CQuery, Error as ApiError,
+  BaseUrl, Headers, Error as ApiError,
   Body, Path, Query, Header, Type,
   GET, POST, PUT, DELETE, HEAD, OPTIONS,
   NO_ENCODE, standardEncoding, PassThroughQueryEncoder
@@ -96,15 +96,15 @@ describe('api', () =>
   }
 
   @BaseUrl(BASE_URL)
-  @CQuery({ 'from-private': function() { return this._queryString; /* might as well be injected */ } })
-  @CQuery({ something: 'some-value', 'something-else': 'some-other-value' })
+  @Query({ 'from-private': function() { return this._queryString; /* might as well be injected */ } })
+  @Query({ something: 'some-value', 'something-else': 'some-other-value' })
   class ApiClient4 extends AbstractApiClient
   {
     private _queryString = 'private-stuff';
     constructor( private _http: Http ) { super(_http); }
     @GET() public testClassQuery(): Observable<Response> { return } 
 
-    @GET() public testClassQueryAndParamQuery( @CQuery('testQuery') testQueryValue: string ): Observable<Response> { return } 
+    @GET() public testClassQueryAndParamQuery( @Query('testQuery') testQueryValue: string ): Observable<Response> { return } 
   }
 
   // for testing missing Http

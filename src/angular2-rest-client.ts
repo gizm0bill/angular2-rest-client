@@ -125,7 +125,7 @@ export function Headers(headers: {})
   return decorator;
 }
 
-export function CQuery(keyOrParams: any, ...extraOptions: any[])
+export function Query(keyOrParams: any, ...extraOptions: any[])
 {
   function decorator <TClass extends { new (...args: any[]): AbstractApiClient }>(target: TClass): TClass;
   function decorator(target: Object, propertyKey?: string | symbol, parameterIndex?: number);
@@ -188,8 +188,6 @@ let buildParamDeco = (paramDecoName: string) =>
 
 // param decorator
 export var Path = buildParamDeco('Path');
-// param decorator
-export var Query = buildParamDeco('Query');
 // param decorator
 export var Body = buildParamDeco('Body');
 // param decorator
