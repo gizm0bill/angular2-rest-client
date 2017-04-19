@@ -94,6 +94,19 @@ describe('api', () =>
     constructor( private _http: Http ) { super(_http); }
     @HEAD() public testBaseUrl(): Observable<Response> { return } 
   }
+
+  @BaseUrl(BASE_URL)
+  @Query({ 'from-private': function() { return this._queryString; /* might as well be injected */ } })
+  @Query({ something: 'some-value', 'something-else': 'some-other-value' })
+  class ApiClient4 extends AbstractApiClient
+  {
+    private _queryString = 'private-stuff';
+    constructor( private _http: Http ) { super(_http); }
+    @GET() public testClassQuery(): Observable<Response> { return } 
+
+    @GET() public testClassQueryAndParamQuery( @Query('testQuery') testQueryValue: string ): Observable<Response> { return } 
+  }
+
   // for testing missing Http
   class ApiClient0 extends AbstractApiClient{ @HEAD() public testError(): Observable<Response> { return } }
   // for testing without BaseUrl
@@ -105,6 +118,7 @@ describe('api', () =>
   apiClient: ApiClient,
   apiClient2: ApiClient2,
   apiClient3: ApiClient3,
+  apiClient4: ApiClient4,
   apiClient0: ApiClient0,
   apiClient00: ApiClient00,
   mockBackend: MockBackend,
@@ -129,15 +143,17 @@ describe('api', () =>
       { provide: ApiClient, useFactory: (http: Http) => new ApiClient(http), deps: [Http] },
       { provide: ApiClient2, useFactory: (http: Http) => new ApiClient2(http), deps: [Http] },
       { provide: ApiClient3, useFactory: (http: Http) => new ApiClient3(http), deps: [Http] },
+      { provide: ApiClient4, useFactory: (http: Http) => new ApiClient4(http), deps: [Http] },
       { provide: ApiClient0, useFactory: () => new ApiClient0(undefined) }, // no Http for this one
       { provide: ApiClient00, useFactory: (http: Http) => new ApiClient00(http), deps: [Http] },
     ],
    }));
 
-  beforeEach( inject( [ApiClient, ApiClient2, ApiClient3, ApiClient0, ApiClient00, MockBackend, Http], 
-    (client, client2, client3, client0, client00, mock, http) =>
+  beforeEach( inject( [ApiClient, ApiClient2, ApiClient3, ApiClient4, ApiClient0, ApiClient00, MockBackend, Http], 
+    (client, client2, client3, client4, client0, client00, mock, http) =>
     {
-      [ apiClient, apiClient2, apiClient3, apiClient0, apiClient00 ] = [ client, client2, client3, client0, client00 ];
+      [ apiClient, apiClient2, apiClient3, apiClient4, apiClient0, apiClient00 ] = 
+        [ client, client2, client3, client4, client0, client00 ];
       mockBackend = mock; http = http
     }));
 
@@ -257,6 +273,29 @@ describe('api', () =>
     let expectedURL = BASE_URL + '?' + query.toString();
     mockBackend.connections.subscribe( (conn: MockConnection) =>  expect(conn.request.url).toEqual(expectedURL) );
     apiClient.testQuery('some[value]', 'some[other][value]').subscribe();
+  }));
+
+  it('adds classwide Query', async( () =>
+  {
+    let query = new URLSearchParams('', new PassThroughQueryEncoder() );
+    query.set( standardEncoding('something'), standardEncoding('some-value') );
+    query.set( standardEncoding('something-else'), standardEncoding('some-other-value') );
+    query.set( standardEncoding('from-private'), standardEncoding('private-stuff') );
+    let expectedURL = BASE_URL + '?' + query.toString();
+    mockBackend.connections.subscribe( (conn: MockConnection) =>  expect(conn.request.url).toEqual(expectedURL) );
+    apiClient4.testClassQuery().subscribe();
+  }));
+
+  it('adds classwide Query alongside param Query', async( () =>
+  {
+    let query = new URLSearchParams('', new PassThroughQueryEncoder() );
+    query.set( standardEncoding('something'), standardEncoding('some-value') );
+    query.set( standardEncoding('something-else'), standardEncoding('some-other-value') );
+    query.set( standardEncoding('from-private'), standardEncoding('private-stuff') );
+    query.set( standardEncoding('testQuery'), standardEncoding('some-other-thing') );
+    let expectedURL = BASE_URL + '?' + query.toString();
+    mockBackend.connections.subscribe( (conn: MockConnection) =>  expect(conn.request.url).toEqual(expectedURL) );
+    apiClient4.testClassQueryAndParamQuery('some-other-thing').subscribe();
   }));
 
   it('adds Path', async( () =>
