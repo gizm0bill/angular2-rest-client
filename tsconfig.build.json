@@ -13,8 +13,13 @@
     "stripInternal": true,
     "removeComments": true,
     "noImplicitAny": false,
-    "outDir": "dist/"
+    "outDir": "dist/",
+    "lib":[ "dom", "es2015", "es2017" ],
+    "typeRoots": [ "node_modules/@types/" ]
   },
-  "lib":[ "dom", "es2015", "es6", "es2015.Reflect", "es7" ],
-  "exclude": [ "node_modules", "**/*.spec.ts" ]
+  "exclude": [ "node_modules", "**/*.spec.ts" ],
+  "files": ["index.ts"],
+  "angularCompilerOptions": {
+    "genDir": "dist/"
+  }
 }
