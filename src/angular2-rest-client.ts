@@ -1,5 +1,3 @@
-import 'core-js/es6/reflect';
-import 'core-js/es7/reflect';
 import { Inject } from '@angular/core';
 import { Headers as NgHeaders, Http, Request, Response, RequestMethod,
   RequestOptions, ResponseContentType, URLSearchParams, QueryEncoder } from '@angular/http';
@@ -10,6 +8,8 @@ import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/mergeMap';
 import 'rxjs/add/operator/catch';
 import 'rxjs/add/operator/share';
+
+const Reflect = global['Reflect'];
 
 export class PassThroughQueryEncoder extends QueryEncoder 
 {
