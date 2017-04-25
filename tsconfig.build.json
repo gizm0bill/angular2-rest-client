@@ -13,14 +13,13 @@
     "stripInternal": true,
     "removeComments": true,
     "noImplicitAny": false,
-    "outDir": "compiled/",
+    "outDir": "dist/",
     "lib":[ "dom", "es2015", "es2017" ],
     "typeRoots": [ "node_modules/@types/" ]
   },
   "exclude": [ "node_modules", "**/*.spec.ts" ],
   "files": ["index.ts"],
   "angularCompilerOptions": {
-    "genDir": "compiled",
-    "skipMetadataEmit": true
+    "genDir": "dist/"
   }
 }

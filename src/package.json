@@ -15,8 +15,8 @@
     "client"
   ],
   "peerDependencies": {
-    "@angular/common": "^4.0.2",
-    "@angular/compiler": "^4.0.2",
+    "@angular/common": "^4.0.3",
+    "@angular/compiler": "^4.0.3",
     "core-js": "^2.4.1",
     "reflect-metadata": "^0.1.10",
     "rxjs": "^5.0.2"

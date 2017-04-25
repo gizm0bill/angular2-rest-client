@@ -5,10 +5,10 @@ import uglify      from 'rollup-plugin-uglify'
 
 export default
 {
-  entry: 'index.js',
-  dest: 'compiled/index.umd.js',
+  entry: 'dist/index.js',
+  dest: 'dist/bundles/index.umd.js',
   sourceMap: true,
-  sourceMapFile: 'compiled/index.umd.js.map',
+  sourceMapFile: 'dist/index.umd.js.map',
   format: 'umd', //'iife',
   moduleName: 'angular2.rest.client',
   onwarn: function(warning) 
