@@ -221,7 +221,7 @@ let buildMethodDeco = (method: any) =>
             query.set( _qk, _q.key[_qk] );
           }
         });
-        queryParams && queryParams.filter( p => args[p.index] )
+        queryParams && queryParams.filter( p => args[p.index] !== undefined )
           .forEach( p => 
           {
             let queryKey, queryVal;
@@ -233,7 +233,7 @@ let buildMethodDeco = (method: any) =>
 
         // path params
         let pathParams: any[] = Reflect.getOwnMetadata(MetadataKeys.Path, target, targetKey);
-        pathParams && pathParams.filter( p => args[p.index] )
+        pathParams && pathParams.filter( p => args[p.index] !== undefined )
           .forEach( p => requestUrl = requestUrl.replace(`{${p.key}}`, args[p.index]) );
 
         // process headers
