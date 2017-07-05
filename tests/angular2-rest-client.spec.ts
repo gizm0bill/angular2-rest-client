@@ -10,7 +10,7 @@ import
 {
   AbstractApiClient,
   BaseUrl, Headers, Error as ApiError,
-  Body, Path, Query, Header, Type,
+  Body, Path, Query, Header, Type, Cache,
   GET, POST, PUT, DELETE, HEAD, OPTIONS,
   NO_ENCODE, standardEncoding, PassThroughQueryEncoder
 } from '../src/angular2-rest-client';
@@ -21,6 +21,7 @@ describe('api', () =>
   BASE_URL            = '/test-base-url/',
   GET_URL             = 'test-get',
   POST_URL            = 'test-post',
+  POST_CACHE_URL      = 'test-cache-post',
   PUT_URL             = 'test-put',
   DELETE_URL          = 'test-delete',
   HEAD_URL            = 'test-head',
@@ -74,6 +75,10 @@ describe('api', () =>
 
     @HEAD() public testError(): Observable<Response> { return }
     
+    @POST(POST_CACHE_URL)
+    @Headers({ testHeader: HEADER_METHOD_VALUE })
+    @Cache( 300 )
+    public testCache( @Query('testQuery') testQuery: any, @Body('testBody') testBody: any, @Header('testParamHeader') testHeader?: any ): Observable<Response> { return }
   }
 
   // for testing BaseUrl from config file
@@ -236,6 +241,41 @@ describe('api', () =>
         expect( conn.request.headers.toJSON() ).toEqual( jasmine.objectContaining(jsonExpectedHeaders) );
       });
     apiClient.testHeader( HEADER_PARAM_VALUE ).subscribe();
+  }));
+
+  it('should Cache requests', async( () =>
+  {
+    let [ firstCacheReqTimes, firstBCacheReqTimes, secondCacheReqTimes ] = [ 0, 0, 0 ];
+    mockBackend.connections
+      .subscribe( (conn: MockConnection) =>
+      {
+        if ( conn.request.url.indexOf('firstCacheReq') !== -1 )
+        {
+          if ( conn.request.headers.getAll('testParamHeader').join('').length !== 0 ) firstBCacheReqTimes += 1
+          else firstCacheReqTimes += 1;
+        } 
+        if ( conn.request.url.indexOf('secondCacheReq') !== -1 ) secondCacheReqTimes += 1;
+        conn.mockRespond( new Response(new ResponseOptions({ status: 200 })) );
+      });
+    apiClient.testCache( 'firstCacheReq', { testBody: 'testBodyValue' } ).subscribe( _ => expect( firstCacheReqTimes ).toBe(1) ); // cache
+    
+    apiClient.testCache( 'firstCacheReq', { testBody: 'testBodyValue' }, HEADER_PARAM_VALUE ).subscribe( _ =>
+    {
+      expect( firstBCacheReqTimes ).toBe(1);
+      expect( firstCacheReqTimes ).toBe(1);
+    }); // cache first with header
+
+    apiClient.testCache( 'firstCacheReq', { testBody: 'testBodyValue' } ).subscribe( _ => expect( firstCacheReqTimes ).toBe(1) ); // cache
+    apiClient.testCache( 'firstCacheReq', { testBody: 'testBodyValue' }, HEADER_PARAM_VALUE ).subscribe( _ => expect( firstBCacheReqTimes ).toBe(1) ); // still cached
+
+    apiClient.testCache( 'secondCacheReq', { testBody: 'testDifferentBodyValue' } ).subscribe( _ => expect( secondCacheReqTimes ).toBe(1) ); // different stuff
+
+    setTimeout( () => apiClient.testCache( 'firstCacheReq', { testBody: 'testBodyValue' } ).subscribe( _ =>
+    {
+      expect( firstBCacheReqTimes ).toBe(1);
+      expect( firstCacheReqTimes ).toBe(1);
+    }), 100 ); // still cached
+    setTimeout( () => apiClient.testCache( 'firstCacheReq', { testBody: 'testBodyValue' } ).subscribe( _ => expect( firstCacheReqTimes ).toBe(2) ), 1000 ); // expired
   }));
 
   it('adds Body', async( () =>

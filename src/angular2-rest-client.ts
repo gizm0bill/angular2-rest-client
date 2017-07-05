@@ -8,6 +8,7 @@ import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/mergeMap';
 import 'rxjs/add/operator/catch';
 import 'rxjs/add/operator/share';
+import 'rxjs/add/operator/shareReplay';
 
 const Reflect = global['Reflect'];
 
@@ -69,6 +70,7 @@ const MetadataKeys =
   Header: Symbol('apiClient:Header'),
   Type: Symbol('apiClient:ResponseType'),
   Error: Symbol('apiClient:Error'),
+  Cache: Symbol('apiClient:Cache')
 };
 
 /**
@@ -160,6 +162,15 @@ export function Type(arg: ResponseContentType)
   };
 }
 
+// method decorator
+export function Cache(arg: number)
+{
+  return function decorator(target: Object, targetKey?: string | symbol): void
+  {
+    Reflect.defineMetadata( MetadataKeys.Cache, arg, target, targetKey);
+  };
+}
+
 // class decorator
 export function Error(handler: (...args: any[]) => any )
 {
@@ -192,6 +203,8 @@ export var Path = buildParamDeco('Path');
 export var Body = buildParamDeco('Body');
 // param decorator
 export var Header = buildParamDeco('Header');
+
+const cacheMap = new Map;
 
 // build method decorators
 let buildMethodDeco = (method: any) =>
@@ -240,6 +253,7 @@ let buildMethodDeco = (method: any) =>
         let _headers = {},
             defaultHeaders = Reflect.getOwnMetadata(MetadataKeys.Header, target.constructor ),
             methodHeaders = Reflect.getOwnMetadata(MetadataKeys.Header, target, targetKey);
+        
         defaultHeaders && defaultHeaders.forEach( header => 
         {
           let _h = extend({}, header);
@@ -254,6 +268,7 @@ let buildMethodDeco = (method: any) =>
           // method header from @Headers, use smth like @Headers(function(){ return { Key: smth.call(this) }; }), hacky, I know
           else if ( typeof h.key === 'function' ) k = h.key.call(this);
           else k = h.key;
+          // TODO add to headers rather than overwrite?
           extend( _headers, k );
         });
         let headers = new NgHeaders(_headers);
@@ -293,15 +308,39 @@ let buildMethodDeco = (method: any) =>
         // handle @Type
         let responseType = Reflect.getOwnMetadata(MetadataKeys.Type, target, targetKey);
 
+        const makeReq = ( method, baseUrl, requestUrl, headers, body, query, responseType ) =>
+        {
+          const options = new RequestOptions({ method, url: baseUrl + requestUrl, headers, body, search: query, responseType });
+          return new Request(options);
+        },
+        getCacheKey = ( url, headers: NgHeaders, query, responseType ) =>
+        {
+          let headerArr = [];
+          headers.forEach( (value, name) => headerArr.push( name, headers.getAll(name).join() ) );
+          return [url, headerArr.join(), query, responseType].join()
+        };
         // get baseUrl from Promise, file or simple string 
         let baseUrlObs = this.getBaseUrl ? this.getBaseUrl() : Observable.of('');
         let observable = baseUrlObs
         .flatMap( baseUrl =>
         {
-          let options = new RequestOptions({ method, url: baseUrl + requestUrl, headers, body, search: query, responseType }),
-              request = new Request(options);
-          // observable request
-          observable = <Observable<Response>> this.http.request(request).share();
+          // check if we got a cache meta and entry
+          const cacheTime = Reflect.getOwnMetadata( MetadataKeys.Cache, target, targetKey );
+          if ( cacheTime )
+          {
+            const cacheMapKey = getCacheKey( baseUrl + requestUrl, headers, query, responseType ),
+                  cacheMapEntry = cacheMap.get(cacheMapKey);
+            if ( cacheMapEntry &&  ( +new Date ) < cacheMapEntry[0] + cacheTime ) observable = cacheMapEntry[1];
+            else 
+            {
+              observable = <Observable<Response>> this.http.request(makeReq(method, baseUrl, requestUrl, headers, body, query, responseType)).shareReplay();
+              cacheMap.set( cacheMapKey, [ +new Date, observable ] );
+            }
+          }
+          else
+            // observable request
+            observable = <Observable<Response>> this.http.request(makeReq(method, baseUrl, requestUrl, headers, body, query, responseType)).share();
+          
           // plugin error handler if any
           let errorHandler = Reflect.getOwnMetadata(MetadataKeys.Error, target.constructor );
           errorHandler && (observable = <Observable<Response>>observable.catch( errorHandler ));

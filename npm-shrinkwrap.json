@@ -1,36 +1,36 @@
 {
   "name": "angular2-rest-client",
-  "version": "2.0.1",
+  "version": "2.1.0",
   "dependencies": {
     "@angular/common": {
-      "version": "4.0.3",
-      "from": "@angular/common@>=4.0.3 <5.0.0",
-      "resolved": "https://registry.npmjs.org/@angular/common/-/common-4.0.3.tgz"
+      "version": "4.2.5",
+      "from": "@angular/common@4.2.5",
+      "resolved": "https://registry.npmjs.org/@angular/common/-/common-4.2.5.tgz"
     },
     "@angular/compiler": {
-      "version": "4.0.3",
-      "from": "@angular/compiler@>=4.0.3 <5.0.0",
-      "resolved": "https://registry.npmjs.org/@angular/compiler/-/compiler-4.0.3.tgz"
+      "version": "4.2.5",
+      "from": "@angular/compiler@4.2.5",
+      "resolved": "https://registry.npmjs.org/@angular/compiler/-/compiler-4.2.5.tgz"
     },
     "@angular/core": {
-      "version": "4.0.3",
-      "from": "@angular/core@>=4.0.3 <5.0.0",
-      "resolved": "https://registry.npmjs.org/@angular/core/-/core-4.0.3.tgz"
+      "version": "4.2.5",
+      "from": "@angular/core@4.2.5",
+      "resolved": "https://registry.npmjs.org/@angular/core/-/core-4.2.5.tgz"
     },
     "@angular/http": {
-      "version": "4.0.3",
-      "from": "@angular/http@>=4.0.3 <5.0.0",
-      "resolved": "https://registry.npmjs.org/@angular/http/-/http-4.0.3.tgz"
+      "version": "4.2.5",
+      "from": "@angular/http@4.2.5",
+      "resolved": "https://registry.npmjs.org/@angular/http/-/http-4.2.5.tgz"
     },
     "@angular/platform-browser": {
-      "version": "4.0.3",
-      "from": "@angular/platform-browser@>=4.0.3 <5.0.0",
-      "resolved": "https://registry.npmjs.org/@angular/platform-browser/-/platform-browser-4.0.3.tgz"
+      "version": "4.2.5",
+      "from": "@angular/platform-browser@4.2.5",
+      "resolved": "https://registry.npmjs.org/@angular/platform-browser/-/platform-browser-4.2.5.tgz"
     },
     "@angular/platform-browser-dynamic": {
-      "version": "4.0.3",
-      "from": "@angular/platform-browser-dynamic@>=4.0.3 <5.0.0",
-      "resolved": "https://registry.npmjs.org/@angular/platform-browser-dynamic/-/platform-browser-dynamic-4.0.3.tgz"
+      "version": "4.2.5",
+      "from": "@angular/platform-browser-dynamic@4.2.5",
+      "resolved": "https://registry.npmjs.org/@angular/platform-browser-dynamic/-/platform-browser-dynamic-4.2.5.tgz"
     },
     "core-js": {
       "version": "2.4.1",
@@ -43,9 +43,9 @@
       "resolved": "https://registry.npmjs.org/reflect-metadata/-/reflect-metadata-0.1.10.tgz"
     },
     "rxjs": {
-      "version": "5.3.0",
-      "from": "rxjs@>=5.0.2 <6.0.0",
-      "resolved": "https://registry.npmjs.org/rxjs/-/rxjs-5.3.0.tgz"
+      "version": "5.4.1",
+      "from": "rxjs@5.4.1",
+      "resolved": "https://registry.npmjs.org/rxjs/-/rxjs-5.4.1.tgz"
     },
     "symbol-observable": {
       "version": "1.0.4",
@@ -57,15 +57,20 @@
       "from": "systemjs@0.19.39",
       "resolved": "https://registry.npmjs.org/systemjs/-/systemjs-0.19.39.tgz"
     },
+    "tslib": {
+      "version": "1.7.1",
+      "from": "tslib@>=1.7.1 <2.0.0",
+      "resolved": "https://registry.npmjs.org/tslib/-/tslib-1.7.1.tgz"
+    },
     "when": {
       "version": "3.7.8",
       "from": "when@>=3.7.5 <4.0.0",
       "resolved": "https://registry.npmjs.org/when/-/when-3.7.8.tgz"
     },
     "zone.js": {
-      "version": "0.8.8",
-      "from": "zone.js@>=0.8.8 <0.9.0",
-      "resolved": "https://registry.npmjs.org/zone.js/-/zone.js-0.8.8.tgz"
+      "version": "0.8.12",
+      "from": "zone.js@0.8.12",
+      "resolved": "https://registry.npmjs.org/zone.js/-/zone.js-0.8.12.tgz"
     }
   }
 }
