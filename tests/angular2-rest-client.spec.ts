@@ -78,7 +78,7 @@ describe('api', () =>
     @POST(POST_CACHE_URL)
     @Headers({ testHeader: HEADER_METHOD_VALUE })
     @Cache( 300 )
-    public testCache( @Query('testQuery') testQuery: any, @Body('testBody') testBody: any ): Observable<Response> { return }
+    public testCache( @Query('testQuery') testQuery: any, @Body('testBody') testBody: any, @Header('testParamHeader') testHeader?: any ): Observable<Response> { return }
   }
 
   // for testing BaseUrl from config file
@@ -245,18 +245,36 @@ describe('api', () =>
 
   it('should Cache requests', async( () =>
   {
-    let [ firstCacheReqTimes, secondCacheReqTimes ] = [ 0, 0 ];
+    let [ firstCacheReqTimes, firstBCacheReqTimes, secondCacheReqTimes ] = [ 0, 0, 0 ];
     mockBackend.connections
       .subscribe( (conn: MockConnection) =>
       {
-        if ( conn.request.url.indexOf('firstCacheReq') !== -1 ) firstCacheReqTimes += 1;
+        if ( conn.request.url.indexOf('firstCacheReq') !== -1 )
+        {
+          if ( conn.request.headers.getAll('testParamHeader').join('').length !== 0 ) firstBCacheReqTimes += 1
+          else firstCacheReqTimes += 1;
+        } 
         if ( conn.request.url.indexOf('secondCacheReq') !== -1 ) secondCacheReqTimes += 1;
         conn.mockRespond( new Response(new ResponseOptions({ status: 200 })) );
       });
     apiClient.testCache( 'firstCacheReq', { testBody: 'testBodyValue' } ).subscribe( _ => expect( firstCacheReqTimes ).toBe(1) ); // cache
-    apiClient.testCache( 'firstCacheReq', { testBody: 'testBodyValue' } ).subscribe( _ => expect( firstCacheReqTimes ).toBe(1) ); // still cached
+    
+    apiClient.testCache( 'firstCacheReq', { testBody: 'testBodyValue' }, HEADER_PARAM_VALUE ).subscribe( _ =>
+    {
+      expect( firstBCacheReqTimes ).toBe(1);
+      expect( firstCacheReqTimes ).toBe(1);
+    }); // cache first with header
+
+    apiClient.testCache( 'firstCacheReq', { testBody: 'testBodyValue' } ).subscribe( _ => expect( firstCacheReqTimes ).toBe(1) ); // cache
+    apiClient.testCache( 'firstCacheReq', { testBody: 'testBodyValue' }, HEADER_PARAM_VALUE ).subscribe( _ => expect( firstBCacheReqTimes ).toBe(1) ); // still cached
+
     apiClient.testCache( 'secondCacheReq', { testBody: 'testDifferentBodyValue' } ).subscribe( _ => expect( secondCacheReqTimes ).toBe(1) ); // different stuff
-    setTimeout( () => apiClient.testCache( 'firstCacheReq', { testBody: 'testBodyValue' } ).subscribe( _ => expect( firstCacheReqTimes ).toBe(1) ), 100 ); // still cached
+
+    setTimeout( () => apiClient.testCache( 'firstCacheReq', { testBody: 'testBodyValue' } ).subscribe( _ =>
+    {
+      expect( firstBCacheReqTimes ).toBe(1);
+      expect( firstCacheReqTimes ).toBe(1);
+    }), 100 ); // still cached
     setTimeout( () => apiClient.testCache( 'firstCacheReq', { testBody: 'testBodyValue' } ).subscribe( _ => expect( firstCacheReqTimes ).toBe(2) ), 1000 ); // expired
   }));
 

@@ -253,6 +253,7 @@ let buildMethodDeco = (method: any) =>
         let _headers = {},
             defaultHeaders = Reflect.getOwnMetadata(MetadataKeys.Header, target.constructor ),
             methodHeaders = Reflect.getOwnMetadata(MetadataKeys.Header, target, targetKey);
+        
         defaultHeaders && defaultHeaders.forEach( header => 
         {
           let _h = extend({}, header);
@@ -267,6 +268,7 @@ let buildMethodDeco = (method: any) =>
           // method header from @Headers, use smth like @Headers(function(){ return { Key: smth.call(this) }; }), hacky, I know
           else if ( typeof h.key === 'function' ) k = h.key.call(this);
           else k = h.key;
+          // TODO add to headers rather than overwrite?
           extend( _headers, k );
         });
         let headers = new NgHeaders(_headers);
@@ -310,6 +312,12 @@ let buildMethodDeco = (method: any) =>
         {
           const options = new RequestOptions({ method, url: baseUrl + requestUrl, headers, body, search: query, responseType });
           return new Request(options);
+        },
+        getCacheKey = ( url, headers: NgHeaders, query, responseType ) =>
+        {
+          let headerArr = [];
+          headers.forEach( (value, name) => headerArr.push( name, headers.getAll(name).join() ) );
+          return [url, headerArr.join(), query, responseType].join()
         };
         // get baseUrl from Promise, file or simple string 
         let baseUrlObs = this.getBaseUrl ? this.getBaseUrl() : Observable.of('');
@@ -320,7 +328,7 @@ let buildMethodDeco = (method: any) =>
           const cacheTime = Reflect.getOwnMetadata( MetadataKeys.Cache, target, targetKey );
           if ( cacheTime )
           {
-            const cacheMapKey = [baseUrl + requestUrl, JSON.stringify(headers), query, responseType].join(),
+            const cacheMapKey = getCacheKey( baseUrl + requestUrl, headers, query, responseType ),
                   cacheMapEntry = cacheMap.get(cacheMapKey);
             if ( cacheMapEntry &&  ( +new Date ) < cacheMapEntry[0] + cacheTime ) observable = cacheMapEntry[1];
             else 
