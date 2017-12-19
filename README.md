@@ -5,17 +5,9 @@ Tooling inspired by [angular2-webpack-starter](https://github.com/AngularClass/a
 [![npm version](https://badge.fury.io/js/angular2-rest-client.svg)](https://badge.fury.io/js/angular2-rest-client)
 
 ## Installation
-`npm install angular2-rest-client --save`
+`npm install angular2-rest-client --save` / `yarn add angular2-rest-client --save` 
 
-
-Don't forget to add it to your System.js config if you're using that:
-
-`
-'angular2-rest-client': 'npm:angular2-rest-client/bundles/index.umd.js'
-`,
-where `npm:` is the path pointing to `node_modules/`
-
-...also depends on Reflect: `'reflect-metadata': 'npm:reflect-metadata/Reflect.js'`
+Uses deprecated `@angular/http`. Won't support `@angular/common/http` until it's stable and better documented.
 
 ## Example
 
