@@ -79,7 +79,7 @@ const MetadataKeys =
  * @param url - will use this exact string as BaseUrl, unless `configKey` is passed; function - will get assigned to protorype.getBaseUrl
  * @param configKey - will request `url` and get this key from the resulting json
  */
-export function BaseUrl(url: (() => Observable<string>) | string, configKey?: string)
+export function BaseUrl(url: ((...args: any[]) => Observable<string>) | string, configKey?: string)
 {
   return function <TClass extends { new (...args: any[]): AbstractApiClient }>
   (Target: TClass): TClass
