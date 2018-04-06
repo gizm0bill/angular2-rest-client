@@ -10,7 +10,7 @@ function root(args)
 /**
  * Webpack configuration
  */
-module.exports = function(options) 
+module.exports = function(options)
 {
   return {
     /**
@@ -36,7 +36,7 @@ module.exports = function(options)
     ],
     module: 
     {
-      loaders: 
+      rules: 
       [
         /**
          * Source map loader support for *.js files
@@ -64,11 +64,11 @@ module.exports = function(options)
        */
         {
           test: /\.ts$/,
-          loader: 'awesome-typescript-loader',
+          loader: 'ts-loader',
           query: {
             // use inline sourcemaps for "karma-remap-coverage" reporter
-            sourceMap: false,
-            inlineSourceMap: true,
+            // sourceMap: false,
+            // inlineSourceMap: true,
             compilerOptions: { removeComments: true }
           },
           exclude: [/\.e2e\.ts$/]
