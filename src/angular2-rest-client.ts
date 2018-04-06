@@ -320,7 +320,7 @@ let buildMethodDeco = (method: any) =>
           return [url, headerArr.join(), query, responseType].join()
         };
         // get baseUrl from Promise, file or simple string 
-        let baseUrlObs = this.getBaseUrl ? this.getBaseUrl() : Observable.of('');
+        let baseUrlObs = this.getBaseUrl ? this.getBaseUrl( requestUrl ) : Observable.of('');
         let observable = baseUrlObs
         .flatMap( baseUrl =>
         {
