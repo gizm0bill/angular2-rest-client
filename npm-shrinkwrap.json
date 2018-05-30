@@ -1,6 +1,6 @@
 {
   "name": "angular2-rest-client",
-  "version": "3.0.3",
+  "version": "3.1.0",
   "dependencies": {
     "@angular/common": {
       "version": "4.2.5",
