@@ -321,6 +321,7 @@ let buildMethodDeco = (method: any) =>
         };
         // get baseUrl from Promise, file or simple string 
         let baseUrlObs = this.getBaseUrl ? this.getBaseUrl( requestUrl ) : Observable.of('');
+        let requestObj: Request;
         let observable = baseUrlObs
         .flatMap( baseUrl =>
         {
@@ -333,17 +334,21 @@ let buildMethodDeco = (method: any) =>
             if ( cacheMapEntry &&  ( +new Date ) < cacheMapEntry[0] + cacheTime ) observable = cacheMapEntry[1];
             else 
             {
-              observable = <Observable<Response>> this.http.request(makeReq(method, baseUrl, requestUrl, headers, body, query, responseType)).shareReplay();
+              requestObj = makeReq(method, baseUrl, requestUrl, headers, body, query, responseType);
+              observable = <Observable<Response>> this.http.request( requestObj ).shareReplay();
               cacheMap.set( cacheMapKey, [ +new Date, observable ] );
             }
           }
           else
+          {
+            requestObj = makeReq(method, baseUrl, requestUrl, headers, body, query, responseType);
             // observable request
-            observable = <Observable<Response>> this.http.request(makeReq(method, baseUrl, requestUrl, headers, body, query, responseType)).share();
-          
+            observable = <Observable<Response>> this.http.request( requestObj ).share();
+          }
           // plugin error handler if any
           let errorHandler = Reflect.getOwnMetadata(MetadataKeys.Error, target.constructor );
-          errorHandler && (observable = <Observable<Response>>observable.catch( errorHandler ));
+          errorHandler && (observable = <Observable<Response>>observable.catch( (err, caught) =>
+            errorHandler.bind( target, err, caught, requestObj ).call() ));
 
           // oldValue.call(this, observable)
 
