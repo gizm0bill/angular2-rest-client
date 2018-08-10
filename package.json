@@ -1,6 +1,6 @@
 {
   "name": "angular2-rest-client",
-  "version": "3.0.3",
+  "version": "3.0.4",
   "description": "Angular2 REST Client",
   "main": "index.js",
   "scripts": {
