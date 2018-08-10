@@ -64,8 +64,12 @@ describe('api', () =>
                               @Body('testBodyParamAny') testBodyParamAny: any,
                               @Body() testBodyParamAnyNoKey: any ): Observable<Response> { return }
 
-    @HEAD() public testQuery( @Query('testQuery[Param]') testQueryValue: string, 
-      @Query('testQueryParam[NotEncoded]', NO_ENCODE) testQueryValueNotEncoded: string ): Observable<Response> { return }
+    @HEAD() public testQuery
+    (
+      @Query('testQuery[Param]') testQueryValue: string, 
+      @Query('testQuery[Param]') testQueryValue2: string, 
+      @Query('testQueryParam[NotEncoded]', NO_ENCODE) testQueryValueNotEncoded: string
+    ): Observable<Response> { return }
 
     @HEAD(PATH_PARAM_URL) 
     public testPath( @Path('testPathParam') testPathValue: string ): Observable<Response> { return }
@@ -309,10 +313,11 @@ describe('api', () =>
     let query = new URLSearchParams('', new PassThroughQueryEncoder() );
     // order counts apparently
     query.set( 'testQueryParam[NotEncoded]', 'some[other][value]' );
-    query.set( standardEncoding('testQuery[Param]'), standardEncoding('some[value]') );
+    query.set( standardEncoding('testQuery[Param]'), standardEncoding('some[value][also]') );
+    query.append( standardEncoding('testQuery[Param]'), standardEncoding('some[value]') );
     let expectedURL = BASE_URL + '?' + query.toString();
     mockBackend.connections.subscribe( (conn: MockConnection) =>  expect(conn.request.url).toEqual(expectedURL) );
-    apiClient.testQuery('some[value]', 'some[other][value]').subscribe();
+    apiClient.testQuery('some[value]', 'some[value][also]', 'some[other][value]').subscribe();
   }));
 
   it('adds classwide Query', async( () =>

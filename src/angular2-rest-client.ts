@@ -241,7 +241,7 @@ let buildMethodDeco = (method: any) =>
             // don't uri encode flagged params
             if ( Object.values(p).indexOf(NO_ENCODE) !== -1 ) [ queryKey, queryVal ] = [ p.key, args[p.index] ];
             else [ queryKey, queryVal ] = [ standardEncoding(p.key), standardEncoding(args[p.index]) ];
-            return query.set( queryKey, queryVal );
+            return query.append( queryKey, queryVal );
           });
 
         // path params
