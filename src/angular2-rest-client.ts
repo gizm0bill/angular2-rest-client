@@ -1,9 +1,7 @@
 import { Inject } from '@angular/core';
 import { Headers as NgHeaders, Http, Request, Response, RequestMethod,
   RequestOptions, ResponseContentType, URLSearchParams, QueryEncoder } from '@angular/http';
-import { Observable } from 'rxjs/Observable';
-import 'rxjs/add/observable/fromPromise';
-import 'rxjs/add/observable/of';
+import { Observable, from, of } from 'rxjs';
 import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/mergeMap';
 import 'rxjs/add/operator/catch';
@@ -95,7 +93,7 @@ export function BaseUrl(url: ((...args: any[]) => Observable<string>) | string, 
         return x;
       };
     }
-    else Target.prototype.getBaseUrl = () => Observable.fromPromise( Promise.resolve(url) );
+    else Target.prototype.getBaseUrl = () => from( Promise.resolve(url) );
     return Target;
   };
 }
@@ -320,7 +318,7 @@ let buildMethodDeco = (method: any) =>
           return [url, headerArr.join(), query, responseType].join()
         };
         // get baseUrl from Promise, file or simple string 
-        let baseUrlObs = this.getBaseUrl ? this.getBaseUrl( requestUrl ) : Observable.of('');
+        let baseUrlObs = this.getBaseUrl ? this.getBaseUrl( requestUrl ) : of('');
         let observable = baseUrlObs
         .flatMap( baseUrl =>
         {

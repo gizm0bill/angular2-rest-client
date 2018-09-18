@@ -14,6 +14,7 @@ import
   GET, POST, PUT, DELETE, HEAD, OPTIONS,
   NO_ENCODE, standardEncoding, PassThroughQueryEncoder
 } from '../src/angular2-rest-client';
+import { throwError } from 'rxjs';
 
 describe('api', () =>
 {
@@ -38,7 +39,7 @@ describe('api', () =>
   // our test subject
   @BaseUrl(BASE_URL)
   @Headers({ testClassHeader: HEADER_CLASS_VALUE })
-  @ApiError( (err, caught): Observable<string> => Observable.throw(ERROR) )
+  @ApiError( (err, caught) => throwError(ERROR) )
   class ApiClient extends AbstractApiClient
   {
     constructor( protected http: Http ) { super(http); }
@@ -177,7 +178,7 @@ describe('api', () =>
     {
       conn.mockError(new Error);
     })
-    apiClient.testError().subscribe(_=>_, err => expect(err).toEqual(ERROR));
+    apiClient.testError().subscribe(_=>_, err => expect(err).toEqual(ERROR) );
   }));
 
   it('works without BaseUrl ', async(() =>
